@@ -3,7 +3,8 @@
 use std::env::args;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
-use std::error::Error;
+use std::error;
+use std::io::{Error, ErrorKind};
 use std::time::{Instant, Duration};
 use tokio::prelude::*;
 use tokio::timer::Delay;
@@ -13,7 +14,7 @@ use tokio::timer::Delay;
 
 const ADDR: &str = "127.0.0.1:8080";
 
-async fn run_server() -> Result<(), Box<dyn Error>> {
+async fn run_server() -> Result<(), Box<dyn error::Error>> {
     let addr = ADDR.parse()?;
     let mut listener = TcpListener::bind(&addr).unwrap();
 
@@ -48,7 +49,7 @@ async fn run_server() -> Result<(), Box<dyn Error>> {
     }
 }
 
-async fn run_client() -> Result<(), Box<dyn Error>> {
+async fn run_client() -> Result<(), Box<dyn error::Error>> {
     let addr = ADDR.parse()?;
 
     let mut stream = TcpStream::connect(&addr).await?;
@@ -84,7 +85,7 @@ async fn run_client() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), Box<dyn error::Error>> {
     let args: Vec<String> = args().collect();
 
     println!("Hello, world!");
@@ -95,6 +96,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             _ => run_server().await,
         }
     } else {
-        Ok(())
+        let err: Error = Error::new(ErrorKind::InvalidInput, "Expected an argument (client/server)");
+        let out_err: Box<dyn error::Error> = Box::new(err);
+
+        Err(out_err)
     }
 }
